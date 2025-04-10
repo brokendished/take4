@@ -1,49 +1,103 @@
 
-import { Configuration, OpenAIApi } from 'openai';
+import React, { useEffect, useRef, useState } from 'react';
+import './ChatbotChat.css';
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function ChatbotChat() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [category, setCategory] = useState('');
+  const [image, setImage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const messagesEndRef = useRef(null);
 
-const openai = new OpenAIApi(configuration);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  try {
-    const { messages = [], name = '', email = '', phone = '', category = '', image = '' } = req.body;
+  const handleSend = async (text) => {
+    if (!text.trim()) return;
 
-    const systemPrompt = \`
-You are a helpful, casual repair chatbot for home services. Greet the user if it's the first message. Ask what they need help with, and suggest a few common categories like "Plumbing", "AC", "Broken Appliance" — but let them type freely.
+    const newMessages = [...messages, { from: 'user', text }];
+    setMessages(newMessages);
+    setInput('');
+    setIsLoading(true);
 
-Collect name and email (or phone) together, but don't block progress if email is missing — just try to get it gently. Ask follow-up questions to understand the root problem. Be conversational but not annoying. Don't repeat yourself. Be short and clear.
+    try {
+      const res = await fetch('/api/chatbot_chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMessages,
+          name,
+          email,
+          phone,
+          category,
+          image,
+        }),
+      });
 
-Once enough detail is given, thank the user, summarize the issue, suggest a possible fix (do not give a price), and let them know a certified contractor will follow up shortly. Let them know they'll receive a recap and be invited to create an account to track past quotes.
-\`;
+      const data = await res.json();
+      if (data?.response) {
+        setMessages((prev) => [...prev, { from: 'bot', text: data.response }]);
+      }
+      if (data?.suggestions?.length) {
+        setSuggestions(data.suggestions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (err) {
+      console.error('Chatbot error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const chatMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map(m => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text }))
-    ];
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSend(input);
+  };
 
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-4',
-      messages: chatMessages,
-      temperature: 0.7,
-    });
+  return (
+    <div className="chat-container">
+      <div className="chat-box">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`message ${msg.from}`}>
+            {msg.text}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+        {suggestions.length > 0 && (
+          <div className="suggestions">
+            {suggestions.map((s, i) => (
+              <button key={i} onClick={() => handleSend(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-    const response = completion.data.choices[0].message.content;
-
-    return res.status(200).json({
-      response,
-      step: null,
-      suggestions: []
-    });
-  } catch (err) {
-    console.error('chatbot_chat error:', err.response?.data || err.message);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+      <form onSubmit={handleSubmit} className="chat-input">
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? '...' : 'Send'}
+        </button>
+      </form>
+    </div>
+  );
 }
-    
+
+export default ChatbotChat;
