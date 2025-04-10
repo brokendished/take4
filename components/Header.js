@@ -1,6 +1,6 @@
 import React from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import '..styles/Header.css';
+import '../styles/Header.css';
 
 function Header() {
   const { data: session } = useSession();
