@@ -1,7 +1,3 @@
-
-import React, { useEffect, useRef, useState } from 'react';
-import './ChatbotChat.css';
-
 function ChatbotChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
