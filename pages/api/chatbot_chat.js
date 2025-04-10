@@ -1,161 +1,49 @@
-function ChatbotChat() {
-    { from: 'bot', text: 'Hey! How can I help today?' }
-  ]);
-    name: '',
-    email: '',
-    phone: '',
-    category: ''
-  });
 
-  const categories = [
-    "Plumbing", "Painting", "Car", "AC / HVAC", "Outdoor",
-    "Electrical", "Handyman", "Windows & Doors", "Appliance Repair", "Other"
-  ];
+import { Configuration, OpenAIApi } from 'openai';
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-    const newMessage = { from: 'user', text: input };
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
-    setInput('');
+const openai = new OpenAIApi(configuration);
 
-    if (step === 0) {
-      setMessages([...updatedMessages, {
-        from: 'bot',
-        text: 'Got it! What type of help do you need?',
-        buttons: categories
-      }]);
-      setStep(0.5);
-    } else if (step === 0.5) {
-      // Shouldn’t happen — users should click a button here
-    } else if (step === 1) {
-      setForm(prev => ({ ...prev, name: input }));
-      setMessages([...updatedMessages, { from: 'bot', text: 'Cool — and your email?' }]);
-      setStep(2);
-    } else if (step === 2) {
-      const validEmail = input.includes('@') && input.includes('.');
-      if (validEmail) {
-        setForm(prev => ({ ...prev, email: input }));
-        setStep(4);
-        await handleAIResponse(updatedMessages, { ...form, email: input });
-      } else {
-        setMessages([...updatedMessages, { from: 'bot', text: 'No worries — can I grab your phone number instead?' }]);
-        setStep(3);
-      }
-    } else if (step === 3) {
-      const cleaned = input.replace(/\D/g, '');
-      if (cleaned.length >= 7) {
-        setForm(prev => ({ ...prev, phone: input }));
-        setStep(4);
-        await handleAIResponse(updatedMessages, { ...form, phone: input });
-      } else {
-        setMessages([...updatedMessages, {
-          from: 'bot',
-          text: 'Totally cool — I just need some way to reach you. Email or phone?'
-        }]);
-      }
-    } else {
-      await handleAIResponse(updatedMessages, form);
-    }
-  };
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const handleAIResponse = async (allMessages, formData) => {
-    setLoading(true);
-    setMessages([...allMessages, { from: 'bot', text: 'Let me think for a second...' }]);
+  try {
+    const { messages = [], name = '', email = '', phone = '', category = '', image = '' } = req.body;
 
-    try {
-      const res = await fetch('/api/aiQuote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          image,
-          messages: allMessages
-        })
-      });
+    const systemPrompt = \`
+You are a helpful, casual repair chatbot for home services. Greet the user if it's the first message. Ask what they need help with, and suggest a few common categories like "Plumbing", "AC", "Broken Appliance" — but let them type freely.
 
-      const data = await res.json();
-      const reply = data.reply || 'Hmm, I couldn’t figure that one out.';
-      setMessages(prev => [...prev, { from: 'bot', text: reply }]);
-    } catch (err) {
-      console.error(err);
-      setMessages(prev => [...prev, { from: 'bot', text: 'Something went wrong. Try again later.' }]);
-    } finally {
-      setLoading(false);
-    }
-  };
+Collect name and email (or phone) together, but don't block progress if email is missing — just try to get it gently. Ask follow-up questions to understand the root problem. Be conversational but not annoying. Don't repeat yourself. Be short and clear.
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+Once enough detail is given, thank the user, summarize the issue, suggest a possible fix (do not give a price), and let them know a certified contractor will follow up shortly. Let them know they'll receive a recap and be invited to create an account to track past quotes.
+\`;
 
-    const url = URL.createObjectURL(file);
-    setImage(url);
-    setMessages(prev => [
-      ...prev,
-      { from: 'user', text: '[Photo uploaded]' },
-      { from: 'bot', text: 'Got it! Thanks for the photo.' }
-    ]);
-  };
+    const chatMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text }))
+    ];
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') sendMessage();
-  };
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-4',
+      messages: chatMessages,
+      temperature: 0.7,
+    });
 
-  const handleCategoryClick = (category) => {
-    const msg = `Selected: ${category}`;
-    setForm(prev => ({ ...prev, category }));
-    const newMessages = [...messages, { from: 'user', text: msg }];
-    setMessages([...newMessages, { from: 'bot', text: 'Thanks! What’s your name?' }]);
-    setStep(1);
-  };
+    const response = completion.data.choices[0].message.content;
 
-  return (
-    <div className="chatbot-container">
-      <div className="chat-window">
-        {messages.map((msg, i) => (
-          <div key={i} className={`message ${msg.from}`}>
-            {msg.text}
-            {msg.buttons && (
-              <div className="chat-button-container">
-                {msg.buttons.map((btn, j) => (
-                  <button key={j} className="chat-button" onClick={() => handleCategoryClick(btn)}>{btn}</button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-        {image && <img src={image} alt="Uploaded" className="preview" />}
-        {loading && <div className="message bot">...</div>}
-      </div>
-
-      <div className="input-area">
-        <input
-          type="text"
-          value={input}
-          placeholder="Type your message..."
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          id="file-upload"
-          style={{ display: 'none' }}
-          onChange={handleImageUpload}
-        />
-        <label htmlFor="file-upload" className="upload-button" title="Upload a photo">📸</label>
-        <button onClick={sendMessage}>Send</button>
-      </div>
-
-      <footer className="footer">
-        <a href="#">Contact</a> · <a href="#">Terms</a> · <a href="#">About</a>
-      </footer>
-    </div>
-  );
+    return res.status(200).json({
+      response,
+      step: null,
+      suggestions: []
+    });
+  } catch (err) {
+    console.error('chatbot_chat error:', err.response?.data || err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
-
-export default ChatbotChat;
-    
     
