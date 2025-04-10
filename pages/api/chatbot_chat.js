@@ -1,16 +1,6 @@
-
-import React, { useState } from 'react';
-import './ChatbotChat.css';
-
-function ChatbotChat() {
-  const [messages, setMessages] = useState([
+unction ChatbotChat() {
     { from: 'bot', text: 'Hey! How can I help today?' }
   ]);
-  const [input, setInput] = useState('');
-  const [step, setStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState(null);
-  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
@@ -167,4 +157,5 @@ function ChatbotChat() {
 }
 
 export default ChatbotChat;
+    
     
