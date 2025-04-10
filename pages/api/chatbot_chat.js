@@ -1,4 +1,4 @@
-unction ChatbotChat() {
+function ChatbotChat() {
     { from: 'bot', text: 'Hey! How can I help today?' }
   ]);
     name: '',
