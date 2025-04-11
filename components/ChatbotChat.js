@@ -56,10 +56,7 @@ export default function ChatbotChat() {
       });
 
       const data = await res.json();
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: data.reply },
-      ]);
+      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
     } catch (err) {
       console.error('Chatbot error:', err);
       setMessages([
@@ -109,59 +106,61 @@ export default function ChatbotChat() {
   const toggleCamera = () => {
     stopLiveChat();
     setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
-    setTimeout(startLiveChat, 500); // restart after a moment
+    setTimeout(startLiveChat, 500);
   };
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.messages}>
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
-          >
-            {msg.content}
-          </div>
-        ))}
-        <div ref={chatRef} />
-
-        {live && stream && (
-          <div className={styles.videoWrapper}>
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className={styles.videoPreview}
-            />
-            <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
-            <div className={styles.videoControls}>
-              <button onClick={takeScreenshot}>📸 Snap</button>
-              <button onClick={toggleCamera}>🔄 Flip Camera</button>
-              <button onClick={stopLiveChat}>✖️ Stop</button>
+      <div className={styles.chatBox}>
+        <div className={styles.messages}>
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
+            >
+              {msg.content}
             </div>
+          ))}
+          <div ref={chatRef} />
+
+          {live && stream && (
+            <div className={styles.videoWrapper}>
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className={styles.videoPreview}
+              />
+              <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
+              <div className={styles.videoControls}>
+                <button onClick={takeScreenshot}>📸 Snap</button>
+                <button onClick={toggleCamera}>🔄 Flip Camera</button>
+                <button onClick={stopLiveChat}>✖️ Stop</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.inputArea}>
+          <input
+            type="text"
+            placeholder="Type your message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <button onClick={handleSend} disabled={loading}>Send</button>
+        </div>
+
+        {!live && (
+          <div className={styles.liveButtonWrapper}>
+            <button onClick={startLiveChat} className={styles.liveButton}>
+              🎥 Start Live Chat
+            </button>
           </div>
         )}
       </div>
-
-      <div className={styles.inputArea}>
-        <input
-          type="text"
-          placeholder="Type your message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <button onClick={handleSend} disabled={loading}>Send</button>
-      </div>
-
-      {!live && (
-        <div className={styles.liveButtonWrapper}>
-          <button onClick={startLiveChat} className={styles.liveButton}>
-            🎥 Start Live Chat
-          </button>
-        </div>
-      )}
     </div>
   );
 }
