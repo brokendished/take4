@@ -5,8 +5,8 @@ export default function ChatbotChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content:
-        "Hey! What can I help you with today? You can type or click: Plumbing, AC, Broken Appliance.",
+      content: "Hey! What can I help you with today?",
+      suggestions: ['Plumbing', 'AC', 'Broken Appliance'],
     },
   ]);
   const [input, setInput] = useState('');
@@ -56,7 +56,10 @@ export default function ChatbotChat() {
       });
 
       const data = await res.json();
-      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: data.reply },
+      ]);
     } catch (err) {
       console.error('Chatbot error:', err);
       setMessages([
@@ -70,6 +73,11 @@ export default function ChatbotChat() {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSend();
+  };
+
+  const handleSuggestionClick = (text) => {
+    setInput(text);
+    setTimeout(handleSend, 100); // allow input to update before sending
   };
 
   const startLiveChat = async () => {
@@ -111,56 +119,62 @@ export default function ChatbotChat() {
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatBox}>
-        <div className={styles.messages}>
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
-            >
-              {msg.content}
-            </div>
-          ))}
-          <div ref={chatRef} />
-
-          {live && stream && (
-            <div className={styles.videoWrapper}>
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className={styles.videoPreview}
-              />
-              <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
-              <div className={styles.videoControls}>
-                <button onClick={takeScreenshot}>📸 Snap</button>
-                <button onClick={toggleCamera}>🔄 Flip Camera</button>
-                <button onClick={stopLiveChat}>✖️ Stop</button>
+      <div className={styles.messages}>
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
+          >
+            {msg.content}
+            {msg.suggestions && (
+              <div className={styles.suggestions}>
+                {msg.suggestions.map((s, idx) => (
+                  <button key={idx} onClick={() => handleSuggestionClick(s)}>
+                    {s}
+                  </button>
+                ))}
               </div>
+            )}
+          </div>
+        ))}
+        <div ref={chatRef} />
+        {live && stream && (
+          <div className={styles.videoWrapper}>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className={styles.videoPreview}
+            />
+            <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
+            <div className={styles.videoControls}>
+              <button onClick={takeScreenshot}>📸 Snap</button>
+              <button onClick={toggleCamera}>🔄 Flip Camera</button>
+              <button onClick={stopLiveChat}>✖️ Stop</button>
             </div>
-          )}
-        </div>
-
-        <div className={styles.inputArea}>
-          <input
-            type="text"
-            placeholder="Type your message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
-          <button onClick={handleSend} disabled={loading}>Send</button>
-        </div>
-
-        {!live && (
-          <div className={styles.liveButtonWrapper}>
-            <button onClick={startLiveChat} className={styles.liveButton}>
-              🎥 Start Live Chat
-            </button>
           </div>
         )}
       </div>
+
+      <div className={styles.inputArea}>
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+        />
+        <button onClick={handleSend} disabled={loading}>Send</button>
+      </div>
+
+      {!live && (
+        <div className={styles.liveButtonWrapper}>
+          <button onClick={startLiveChat} className={styles.liveButton}>
+            🎥 Start Live Chat
+          </button>
+        </div>
+      )}
     </div>
   );
 }
