@@ -1,25 +1,18 @@
 import React from 'react';
-import { signIn, signOut, useSession } from 'next-auth/react';
-import '../styles/Header.css';
+import Link from 'next/link';
+import styles from './Header.module.css';
 
-function Header() {
-  const { data: session } = useSession();
-
+const Header = () => {
   return (
-    <header className="site-header">
-      <div className="logo">🤖 QuickQuote</div>
-      <nav>
-        <a href="#">Home</a>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-        {session ? (
-          <button onClick={() => signOut()}>Logout</button>
-        ) : (
-          <button onClick={() => signIn('google')}>Login</button>
-        )}
+    <header className={styles.header}>
+      <div className={styles.logo}>AI Quote Bot</div>
+      <nav className={styles.nav}>
+        <Link href="/login">Login</Link>
+        <Link href="/about">About</Link>
+        <Link href="/contact">Contact</Link>
       </nav>
     </header>
   );
-}
+};
 
 export default Header;
