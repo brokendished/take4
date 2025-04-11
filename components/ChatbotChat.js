@@ -1,106 +1,77 @@
+// ✅ components/ChatbotChat.js
+import { useState, useEffect, useRef } from 'react';
+import styles from '../styles/ChatbotChat.module.css';
 
-import React, { useEffect, useRef, useState } from 'react';
-import styles from './ChatbotChat.module.css';
-
-function ChatbotChat() {
-  const [messages, setMessages] = useState([]);
+export default function ChatbotChat() {
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: "Hey! What can I help you with today? You can type or click: Plumbing, AC, Broken Appliance." }
+  ]);
   const [input, setInput] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [category, setCategory] = useState('');
-  const [image, setImage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const chatRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const name = '';     // Optional: pull from auth later
+  const email = '';
+  const phone = '';
+  const image = '';
+  const category = '';
 
   useEffect(() => {
-    scrollToBottom();
+    chatRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async (text) => {
-    if (!text.trim()) return;
-
-    const newMessages = [...messages, { from: 'user', text }];
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const newMessages = [...messages, { role: 'user', content: input }];
     setMessages(newMessages);
     setInput('');
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       const res = await fetch('/api/chatbot_chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages,
-          name,
-          email,
-          phone,
-          category,
-          image,
-        }),
+        body: JSON.stringify({ messages: newMessages, name, email, phone, category, image })
       });
 
       const data = await res.json();
-      if (data?.response) {
-        setMessages((prev) => [...prev, { from: 'bot', text: data.response }]);
-      }
-      if (data?.suggestions?.length) {
-        setSuggestions(data.suggestions);
-      } else {
-        setSuggestions([]);
-      }
+      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
     } catch (err) {
       console.error('Chatbot error:', err);
+      setMessages([...newMessages, { role: 'assistant', content: "Oops! Something went wrong." }]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleSend(input);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSend();
   };
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatBox}>
-        {messages.map((msg, idx) => (
+      <div className={styles.messages}>
+        {messages.map((msg, i) => (
           <div
-            key={idx}
-            className={`${styles.message} ${msg.from === 'user' ? styles.user : styles.bot}`}
+            key={i}
+            className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
           >
-            {msg.text}
+            {msg.content}
           </div>
         ))}
-        <div ref={messagesEndRef} />
-        {suggestions.length > 0 && (
-          <div className={styles.suggestions}>
-            {suggestions.map((s, i) => (
-              <button key={i} onClick={() => handleSend(s)}>
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+        <div ref={chatRef} />
       </div>
-
-      <form onSubmit={handleSubmit} className={styles.chatInput}>
+      <div className={styles.inputArea}>
         <input
           type="text"
           placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
         />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? '...' : 'Send'}
-        </button>
-      </form>
+        <button onClick={handleSend} disabled={loading}>Send</button>
+      </div>
     </div>
   );
 }
 
-export default ChatbotChat;
