@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  max-width: 800px;
+  max-width: 420px;
   margin: 0 auto;
   padding: 1rem;
   background: #ffffff;
@@ -11,16 +11,16 @@
   overflow: hidden;
 }
 
-.chatBox {
+.messages {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
   gap: 0.5rem;
 }
 
-.message {
+.botMsg,
+.userMsg {
   padding: 0.75rem 1rem;
   margin: 0.25rem 0;
   border-radius: 18px;
@@ -30,19 +30,19 @@
   line-height: 1.4;
 }
 
-.user {
+.userMsg {
   background: #dbeafe;
   align-self: flex-end;
   text-align: right;
 }
 
-.bot {
+.botMsg {
   background: #f3f4f6;
   align-self: flex-start;
   text-align: left;
 }
 
-.chatInput {
+.inputArea {
   display: flex;
   padding: 1rem;
   gap: 0.5rem;
@@ -50,7 +50,7 @@
   background: #fff;
 }
 
-.chatInput input {
+.inputArea input {
   flex: 1;
   padding: 0.75rem 1rem;
   border-radius: 999px;
@@ -58,7 +58,7 @@
   font-size: 1rem;
 }
 
-.chatInput button {
+.inputArea button {
   padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 999px;
@@ -69,60 +69,89 @@
   transition: background 0.3s ease;
 }
 
-.chatInput button:hover {
+.inputArea button:hover {
   background: #1e40af;
 }
 
-.chatInput button:disabled {
+.inputArea button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
 
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+.liveButtonWrapper {
+  text-align: center;
+  margin-top: 1rem;
 }
 
-.suggestions button {
-  background: white;
-  border: 1px solid #2563eb;
-  color: #2563eb;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
+.liveButton {
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s ease-in-out;
 }
 
-.suggestions button:hover {
-  background: #2563eb;
-  color: white;
+.videoWrapper {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Responsive tweaks */
+.videoPreview {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  border: 2px solid #ccc;
+}
+
+.videoNote {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.videoControls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.videoControls button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: #eee;
+  cursor: pointer;
+}
+
 @media (max-width: 600px) {
   .chatContainer {
     padding: 0.5rem;
     border-radius: 0;
+    max-width: 100%;
   }
 
-  .chatInput {
+  .inputArea {
     padding: 0.5rem;
     flex-direction: column;
   }
 
-  .chatInput input {
+  .inputArea input {
     width: 100%;
     margin-bottom: 0.5rem;
   }
 
-  .chatInput button {
+  .inputArea button {
     width: 100%;
   }
 
-  .message {
+  .botMsg,
+  .userMsg {
     font-size: 0.9rem;
   }
 }
