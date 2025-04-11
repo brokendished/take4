@@ -1,10 +1,8 @@
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const openai = new OpenAIApi(configuration);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,46 +10,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
-      messages = [],
-      name = '',
-      email = '',
-      phone = '',
-      category = '',
-      image = '',
-    } = req.body;
+    const { messages = [], name = '', email = '', phone = '', category = '', image = '' } = req.body;
 
-    const systemPrompt = `
+    const systemPrompt = \`
 You are a helpful, casual repair chatbot for home services. Greet the user if it's the first message. Ask what they need help with, and suggest a few common categories like "Plumbing", "AC", "Broken Appliance" — but let them type freely.
 
 Collect name and email (or phone) together, but don't block progress if email is missing — just try to get it gently. Ask follow-up questions to understand the root problem. Be conversational but not annoying. Don't repeat yourself. Be short and clear.
 
-Once enough detail is given, thank the user, summarize the issue, suggest a possible fix (do not give a price), and let them know a certified contractor will follow up shortly. Let them know they'll receive a recap and be invited to create an account to track past quotes.
-`;
+Once you understand the problem, summarize it clearly. Suggest a likely cause or fix (don't give a price). Let the user know a certified professional will reach out shortly. Invite them to create an account to track projects.
+\`;
 
-    const chatMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map((m) => ({
-        role: m.from === 'user' ? 'user' : 'assistant',
-        content: m.text,
-      })),
-    ];
-
-    const completion = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: 'gpt-4',
-      messages: chatMessages,
-      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages
+      ],
+      temperature: 0.7
     });
 
-    const response = completion.data.choices[0].message.content;
+    const reply = response.choices[0].message.content;
 
-    return res.status(200).json({
-      response,
-      step: null,
-      suggestions: [],
-    });
-  } catch (err) {
-    console.error('chatbot_chat error:', err.response?.data || err.message);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(200).json({ reply });
+  } catch (error) {
+    console.error('Chatbot error:', error);
+    res.status(500).json({ error: 'Something went wrong.' });
   }
 }
