@@ -1,18 +1,15 @@
-import React from 'react';
+// components/Header.js
 import Link from 'next/link';
-import styles from './Header.module.css';
+import styles from '../styles/Header.module.css';
 
-const Header = () => {
+export default function Header() {
   return (
-    <header className={styles.header}>
-      <div className={styles.logo}>AI Quote Bot</div>
-      <nav className={styles.nav}>
+    <header className={styles.navbar}>
+      <div className={styles.spacer} />
+      <div className={styles.logo}>QuickQuote</div>
+      <nav className={styles.menu}>
         <Link href="/login">Login</Link>
-        <Link href="/about">About</Link>
-        <Link href="/contact">Contact</Link>
       </nav>
     </header>
   );
-};
-
-export default Header;
+}
