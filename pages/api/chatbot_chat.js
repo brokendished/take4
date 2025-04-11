@@ -19,7 +19,6 @@ export default async function handler(req, res) {
       image = '',
     } = req.body;
 
-    // 🧹 Filter out incomplete/bad messages
     const cleanedMessages = messages.filter(
       (msg) => msg.role && msg.content
     );
@@ -42,6 +41,26 @@ Once you understand the problem, summarize it clearly. Suggest a likely cause or
     });
 
     const reply = response.choices?.[0]?.message?.content || 'Something went wrong.';
+
+    // ✅ Google Sheets Logging (optional)
+    try {
+      await fetch(process.env.SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Timestamp: new Date().toISOString(),
+          Name: name,
+          Email: email,
+          Phone: phone,
+          Image: image,
+          Issue: cleanedMessages.find(m => m.role === 'user')?.content || '',
+          'Chat Transcript': cleanedMessages.map(m => `${m.role}: ${m.content}`).join('\n'),
+          'AI Reply': reply,
+        }),
+      });
+    } catch (sheetErr) {
+      console.error('Logging to sheet failed:', sheetErr);
+    }
 
     res.status(200).json({ reply });
   } catch (error) {
