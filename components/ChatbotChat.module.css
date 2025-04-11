@@ -1,0 +1,91 @@
+
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.chatBox {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.message {
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 1rem;
+  max-width: 75%;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.user {
+  background: #d1eaff;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.bot {
+  background: #eeeeee;
+  align-self: flex-start;
+  text-align: left;
+}
+
+.chatInput {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.chatInput input {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.chatInput button {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 1rem;
+  background: #0070f3;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.chatInput button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.suggestions button {
+  background: #fff;
+  border: 1px solid #0070f3;
+  color: #0070f3;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.suggestions button:hover {
+  background: #0070f3;
+  color: white;
+}
