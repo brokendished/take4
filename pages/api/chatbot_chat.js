@@ -10,7 +10,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], name = '', email = '', phone = '', category = '', image = '' } = req.body;
+    const {
+      messages = [],
+      name = '',
+      email = '',
+      phone = '',
+      category = '',
+      image = '',
+    } = req.body;
+
+    // 🧹 Filter out incomplete/bad messages
+    const cleanedMessages = messages.filter(
+      (msg) => msg.role && msg.content
+    );
 
     const systemPrompt = `
 You are a helpful, casual repair chatbot for home services. Greet the user if it's the first message. Ask what they need help with, and suggest a few common categories like "Plumbing", "AC", "Broken Appliance" — but let them type freely.
@@ -24,16 +36,16 @@ Once you understand the problem, summarize it clearly. Suggest a likely cause or
       model: 'gpt-4',
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages
+        ...cleanedMessages,
       ],
-      temperature: 0.7
+      temperature: 0.7,
     });
 
-    const reply = response.choices[0].message.content;
+    const reply = response.choices?.[0]?.message?.content || 'Something went wrong.';
 
     res.status(200).json({ reply });
   } catch (error) {
     console.error('Chatbot error:', error);
-    res.status(500).json({ error: 'Something went wrong.' });
+    res.status(500).json({ error: 'Something went wrong on the server.' });
   }
 }
