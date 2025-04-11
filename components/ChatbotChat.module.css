@@ -154,4 +154,26 @@
   .userMsg {
     font-size: 0.9rem;
   }
+  .suggestions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suggestions button {
+  background: #fff;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.suggestions button:hover {
+  background: #2563eb;
+  color: white;
+}
 }
