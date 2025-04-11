@@ -1,3 +1,4 @@
+// ✅ pages/api/chatbot_chat.js
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -42,7 +43,7 @@ Once you understand the problem, summarize it clearly. Suggest a likely cause or
 
     const reply = response.choices?.[0]?.message?.content || 'Something went wrong.';
 
-    // ✅ Google Sheets Logging (optional)
+    // ✅ Google Sheets Logging
     try {
       await fetch(process.env.SHEET_WEBHOOK_URL, {
         method: 'POST',
