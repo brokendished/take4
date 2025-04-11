@@ -1,16 +1,23 @@
-// ✅ components/ChatbotChat.js
 import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/ChatbotChat.module.css';
 
 export default function ChatbotChat() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hey! What can I help you with today? You can type or click: Plumbing, AC, Broken Appliance." }
+    {
+      role: 'assistant',
+      content:
+        "Hey! What can I help you with today? You can type or click: Plumbing, AC, Broken Appliance.",
+    },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [live, setLive] = useState(false);
+  const [stream, setStream] = useState(null);
+
+  const videoRef = useRef(null);
   const chatRef = useRef(null);
 
-  const name = '';     // Optional: pull from auth later
+  const name = '';
   const email = '';
   const phone = '';
   const image = '';
@@ -19,6 +26,12 @@ export default function ChatbotChat() {
   useEffect(() => {
     chatRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -31,14 +44,27 @@ export default function ChatbotChat() {
       const res = await fetch('/api/chatbot_chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, name, email, phone, category, image })
+        body: JSON.stringify({
+          messages: newMessages,
+          name,
+          email,
+          phone,
+          category,
+          image,
+        }),
       });
 
       const data = await res.json();
-      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: data.reply },
+      ]);
     } catch (err) {
       console.error('Chatbot error:', err);
-      setMessages([...newMessages, { role: 'assistant', content: "Oops! Something went wrong." }]);
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: 'Oops! Something went wrong.' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -46,6 +72,19 @@ export default function ChatbotChat() {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSend();
+  };
+
+  const startLiveChat = async () => {
+    setLive(true);
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      setStream(mediaStream);
+    } catch (err) {
+      console.error('Failed to access camera/mic', err);
+    }
   };
 
   return (
@@ -60,7 +99,23 @@ export default function ChatbotChat() {
           </div>
         ))}
         <div ref={chatRef} />
+
+        {live && stream && (
+          <div className={styles.videoWrapper}>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className={styles.videoPreview}
+            />
+            <p className={styles.videoNote}>
+              🎥 You’re live — capturing video/audio
+            </p>
+          </div>
+        )}
       </div>
+
       <div className={styles.inputArea}>
         <input
           type="text"
@@ -69,9 +124,18 @@ export default function ChatbotChat() {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
         />
-        <button onClick={handleSend} disabled={loading}>Send</button>
+        <button onClick={handleSend} disabled={loading}>
+          Send
+        </button>
       </div>
+
+      {!live && (
+        <div className={styles.liveButtonWrapper}>
+          <button onClick={startLiveChat} className={styles.liveButton}>
+            🎥 Start Live Chat
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
