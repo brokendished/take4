@@ -13,6 +13,7 @@ export default function ChatbotChat() {
   const [loading, setLoading] = useState(false);
   const [live, setLive] = useState(false);
   const [stream, setStream] = useState(null);
+  const [facingMode, setFacingMode] = useState('user');
 
   const videoRef = useRef(null);
   const chatRef = useRef(null);
@@ -78,13 +79,37 @@ export default function ChatbotChat() {
     setLive(true);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { facingMode },
         audio: true,
       });
       setStream(mediaStream);
     } catch (err) {
       console.error('Failed to access camera/mic', err);
     }
+  };
+
+  const stopLiveChat = () => {
+    stream?.getTracks().forEach((track) => track.stop());
+    setStream(null);
+    setLive(false);
+  };
+
+  const takeScreenshot = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const dataURL = canvas.toDataURL('image/png');
+    setMessages([...messages, { role: 'user', content: '[📸 Snapshot taken]' }]);
+    console.log('Screenshot captured:', dataURL);
+  };
+
+  const toggleCamera = () => {
+    stopLiveChat();
+    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
+    setTimeout(startLiveChat, 500); // restart after a moment
   };
 
   return (
@@ -109,9 +134,12 @@ export default function ChatbotChat() {
               playsInline
               className={styles.videoPreview}
             />
-            <p className={styles.videoNote}>
-              🎥 You’re live — capturing video/audio
-            </p>
+            <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
+            <div className={styles.videoControls}>
+              <button onClick={takeScreenshot}>📸 Snap</button>
+              <button onClick={toggleCamera}>🔄 Flip Camera</button>
+              <button onClick={stopLiveChat}>✖️ Stop</button>
+            </div>
           </div>
         )}
       </div>
@@ -124,9 +152,7 @@ export default function ChatbotChat() {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
         />
-        <button onClick={handleSend} disabled={loading}>
-          Send
-        </button>
+        <button onClick={handleSend} disabled={loading}>Send</button>
       </div>
 
       {!live && (
