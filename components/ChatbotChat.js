@@ -34,9 +34,8 @@ export default function ChatbotChat() {
     }
   }, [stream]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const newMessages = [...messages, { role: 'user', content: input }];
+  const sendMessage = async (text) => {
+    const newMessages = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
     setInput('');
     setLoading(true);
@@ -71,13 +70,16 @@ export default function ChatbotChat() {
     }
   };
 
+  const handleSend = () => {
+    if (input.trim()) sendMessage(input.trim());
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSend();
   };
 
   const handleSuggestionClick = (text) => {
-    setInput(text);
-    setTimeout(handleSend, 100); // allow input to update before sending
+    sendMessage(text);
   };
 
   const startLiveChat = async () => {
@@ -107,7 +109,7 @@ export default function ChatbotChat() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const dataURL = canvas.toDataURL('image/png');
-    setMessages([...messages, { role: 'user', content: '[📸 Snapshot taken]' }]);
+    setMessages((prev) => [...prev, { role: 'user', content: '[📸 Snapshot taken]' }]);
     console.log('Screenshot captured:', dataURL);
   };
 
@@ -121,10 +123,7 @@ export default function ChatbotChat() {
     <div className={styles.chatContainer}>
       <div className={styles.messages}>
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}
-          >
+          <div key={i} className={msg.role === 'assistant' ? styles.botMsg : styles.userMsg}>
             {msg.content}
             {msg.suggestions && (
               <div className={styles.suggestions}>
@@ -138,6 +137,7 @@ export default function ChatbotChat() {
           </div>
         ))}
         <div ref={chatRef} />
+
         {live && stream && (
           <div className={styles.videoWrapper}>
             <video
@@ -150,7 +150,7 @@ export default function ChatbotChat() {
             <p className={styles.videoNote}>🎥 You’re live — capturing video/audio</p>
             <div className={styles.videoControls}>
               <button onClick={takeScreenshot}>📸 Snap</button>
-              <button onClick={toggleCamera}>🔄 Flip Camera</button>
+              <button onClick={toggleCamera}>🔄 Flip</button>
               <button onClick={stopLiveChat}>✖️ Stop</button>
             </div>
           </div>
